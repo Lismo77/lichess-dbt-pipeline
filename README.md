@@ -16,12 +16,35 @@ python -m venv venv
 venv/bin/pip install -r requirements.txt
 
 cp .env.example .env              # then fill in token, username, DB credentials
-set -a; . ./.env; set +a
+direnv allow                      # optional: auto-loads .env in this repo (see below)
+set -a; . ./.env; set +a          # ...or load it manually for this shell
 PGPASSWORD="$PG_PASSWORD" psql -h "$PG_HOST" -U "$PG_USER" -d "$PG_DB" -f sql/001_create_raw.sql
 ```
 
-dbt also needs a `chess_dbt` profile in `~/.dbt/profiles.yml` pointing at the same database
-(target schema `dbt_dev`). Check it with `cd chess_dbt && ../venv/bin/dbt debug`.
+dbt needs a `chess_dbt` profile in `~/.dbt/profiles.yml`. Credentials come from `.env`, never
+from the profile itself:
+
+```yaml
+chess_dbt:
+  target: dev
+  outputs:
+    dev:
+      type: postgres
+      host: "{{ env_var('PG_HOST') }}"
+      port: 5432
+      dbname: "{{ env_var('PG_DB') }}"
+      user: "{{ env_var('PG_USER') }}"
+      pass: "{{ env_var('PG_PASSWORD') }}"
+      schema: dbt_dev
+      threads: 1
+```
+
+dbt (1.12+) loads `.env` automatically from the current directory or any parent, so this works
+anywhere inside the repo. Check with `cd chess_dbt && ../venv/bin/dbt debug`.
+
+**direnv** (optional): the committed `.envrc` loads `.env` into your shell whenever you `cd`
+into the repo, so `psql` and other tools see the variables too. Install with
+`sudo dnf install direnv`, add `eval "$(direnv hook bash)"` to `~/.bashrc`, then `direnv allow`.
 
 ## Run
 

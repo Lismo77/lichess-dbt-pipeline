@@ -27,6 +27,13 @@ All run from the repo root unless noted. The venv is NOT auto-activated; use the
 - dbt (from `chess_dbt/`): `../venv/bin/dbt build` (run + test), `../venv/bin/dbt build -s <model>+` (model and downstream)
 - Ad-hoc SQL: `set -a; . ./.env; set +a; PGPASSWORD="$PG_PASSWORD" psql -h "$PG_HOST" -U "$PG_USER" -d "$PG_DB"`
 
+### Env / secrets
+
+- `.env` (repo root) is the single source for DB settings. `~/.dbt/profiles.yml` reads host/dbname/user/pass via `env_var('PG_*')` — no values in the profile.
+- dbt 1.12 auto-loads `.env` itself (`find_dotenv(usecwd=True)` in `dbt/cli/main.py`, walks up from cwd; shell vars win over `.env`). So dbt works from anywhere inside the repo, but fails outside it without the vars exported.
+- The user's interactive shell uses direnv (root `.envrc` = `dotenv`). Claude's non-interactive shell does NOT trigger the direnv hook — keep the `set -a; . ./.env; set +a` prefix, or `direnv exec . <cmd>`.
+- Never echo a secret var, even to check it's set — test with `[ -n "$VAR" ]` and print only yes/no.
+
 ## Conventions
 
 - Postgres SQL, lowercase keywords, tabs for indentation, CTEs that `select * from {{ ref(...) }}` at the top.
