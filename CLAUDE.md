@@ -42,7 +42,7 @@ All run from the repo root unless noted. The venv is NOT auto-activated; use the
 - The 6 anonymous games (May 2026) are probably real late-night games vs a friend — kept.
 - `dim_openings` grain is `(opening_eco, opening_name)` — names repeat across ECO codes.
 - Games with a null ECO drop out of opening aggregates via inner join.
-- Some unrated human games have 0 plies (ended before a move). Not yet decided whether they belong in fct — open question for the user.
+- Games with 0 plies (ended before a move; Lichess still records a result) are excluded from fct. One seen: unrated, recorded as a timeout win.
 
 ## Testing
 

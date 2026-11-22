@@ -1,5 +1,6 @@
 -- One row per real game I played, from my perspective.
--- Excludes stream-setup games vs the Lichess AI (see var setup_game_max_plies).
+-- Excludes games with no moves, and stream-setup games vs the Lichess AI
+-- (see var setup_game_max_plies).
 
 with games as (
 	select * from {{ ref('stg_games') }}
@@ -44,7 +45,8 @@ perspective as (
 
 select *
 from perspective
-where not (
-	opponent_type = 'ai'
-	and ply_count <= {{ var('setup_game_max_plies') }}
-)
+where ply_count > 0	-- ended before anyone moved: no game was played, but Lichess still records a result
+	and not (
+		opponent_type = 'ai'
+		and ply_count <= {{ var('setup_game_max_plies') }}
+	)

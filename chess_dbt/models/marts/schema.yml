@@ -4,7 +4,7 @@ models:
   - name: fct_my_games
     description: >
       One row per real game, reframed from my perspective (my color, my rating, my result).
-      Excludes stream-setup games: AI opponent and ply_count <= var setup_game_max_plies.
+      Excludes games with 0 plies, and stream-setup games: AI opponent and ply_count <= var setup_game_max_plies.
       Includes unrated, anonymous, and real AI games; filter with is_rated / opponent_type.
     columns:
       - name: game_id
