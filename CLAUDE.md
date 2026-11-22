@@ -10,7 +10,7 @@ every change like a teacher (what, why, and the DE concept behind it).
 Lichess API ──fetch_games.py──▶ data/raw/*.jsonl ──load_games.py──▶ Postgres raw.games ──dbt──▶ dbt_dev.*
 ```
 
-- `raw.games(id text pk, data jsonb, loaded_at timestamptz)` — one row per game, full API payload. DDL in `sql/001_create_raw.sql`.
+- `raw.games(id text pk, data jsonb, loaded_at timestamptz)` — one row per game, full API payload. DDL in `sql/postgres/001_create_raw.sql`.
 - Extract writes one immutable timestamped batch file per run to `data/raw/` (gitignored). Load upserts on `id` and skips unchanged payloads, so it's idempotent.
 - Fetch is incremental: newest `createdAt` in raw.games minus a 14-day lookback (Lichess `since` filters on creation time, so late-finishing correspondence games need the overlap).
 - Shared script config (paths, username, DB connection) in `scripts/common.py`.
@@ -36,7 +36,7 @@ All run from the repo root unless noted. The venv is NOT auto-activated; use the
 
 ### CI
 
-- `.github/workflows/dbt-ci.yml`: on push to main / PRs, spins up `postgres:18`, runs `sql/001_create_raw.sql`, loads `ci/fixtures/games.jsonl` with the real loader, then `dbt build`. Throwaway creds in the workflow env — no GitHub Secrets needed for Postgres.
+- `.github/workflows/dbt-ci.yml`: on push to main / PRs, spins up `postgres:18`, runs `sql/postgres/001_create_raw.sql`, loads `ci/fixtures/games.jsonl` with the real loader, then `dbt build`. Throwaway creds in the workflow env — no GitHub Secrets needed for Postgres.
 - Fixture = 25 anonymized edge-case games. When a model handles a new edge case, add a game that hits it.
 - Reproduce CI locally: export tracked files with `git archive "$(git write-tree)"`, fresh venv from requirements.txt, `podman run --rm -p 5433:5432 postgres:18`, set `PG_PORT=5433`, run the workflow steps.
 - Review `git status` before every commit — `git add -A` sweeps in untracked files.

@@ -20,7 +20,7 @@ venv/bin/pip install -r requirements.txt
 cp .env.example .env              # then fill in token, username, DB credentials
 direnv allow                      # optional: auto-loads .env in this repo (see below)
 set -a; . ./.env; set +a          # ...or load it manually for this shell
-PGPASSWORD="$PG_PASSWORD" psql -h "$PG_HOST" -U "$PG_USER" -d "$PG_DB" -f sql/001_create_raw.sql
+PGPASSWORD="$PG_PASSWORD" psql -h "$PG_HOST" -U "$PG_USER" -d "$PG_DB" -f sql/postgres/001_create_raw.sql
 ```
 
 dbt needs a `chess_dbt` profile in `~/.dbt/profiles.yml`. Credentials come from `.env`, never

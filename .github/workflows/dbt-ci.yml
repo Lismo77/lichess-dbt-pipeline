@@ -57,7 +57,7 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Create raw schema
-        run: psql -h "$PG_HOST" -U "$PG_USER" -d "$PG_DB" -v ON_ERROR_STOP=1 -f sql/001_create_raw.sql
+        run: psql -h "$PG_HOST" -U "$PG_USER" -d "$PG_DB" -v ON_ERROR_STOP=1 -f sql/postgres/001_create_raw.sql
 
       - name: Load fixture games
         run: python scripts/load_games.py ci/fixtures/games.jsonl
