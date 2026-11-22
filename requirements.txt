@@ -1,0 +1,7 @@
+# Direct dependencies only, pinned to the versions this project is tested on.
+# Install: python -m venv venv && venv/bin/pip install -r requirements.txt
+dbt-core==1.12.5
+dbt-postgres==1.11.0
+psycopg[binary]==3.3.6
+python-dotenv==1.2.3
+requests==2.34.2
