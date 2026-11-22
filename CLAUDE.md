@@ -28,12 +28,15 @@ All run from the repo root unless noted. The venv is NOT auto-activated; use the
 
 - Postgres SQL, lowercase keywords, tabs for indentation, CTEs that `select * from {{ ref(...) }}` at the top.
 - Percentages: `round(100.0 * x / nullif(n, 0), 1)` — always guard the divisor.
-- Analysis marts filter to `is_rated and not is_vs_bot` unless the model name says otherwise.
+- Analysis marts filter to `is_rated and opponent_type = 'human'` unless the model name says otherwise.
+- Raw is a faithful copy of the API — never filter at ingest. Junk/exclusion rules live in dbt where they're reversible.
 
 ## Data facts (verified 2026-11-22, 374 games)
 
 - `winner` is null only for real draws (stalemate, draw, and timeout/outoftime with insufficient material). No `aborted` games seen yet — if they appear, `fct_my_games.result` will wrongly call them draws.
-- Bot opponents have no `players.<color>.user` key; that's how `is_vs_bot` is derived (and why usernames can be null).
+- A player with no `players.<color>.user` key is either the Lichess AI (has `aiLevel`) or an anonymous human (neither key) — no account ≠ bot. `fct_my_games.opponent_type` = human / anonymous / ai.
+- AI games with ≤ `setup_game_max_plies` (dbt var, 20) are OBS stream-setup junk; excluded in `fct_my_games`, kept in raw. Real Stockfish practice games are expected later and must stay in.
+- The 6 anonymous games (May 2026) are probably real late-night games vs a friend — kept.
 - `dim_openings` grain is `(opening_eco, opening_name)` — names repeat across ECO codes.
 - One game has a null ECO; it drops out of opening aggregates via inner join.
 

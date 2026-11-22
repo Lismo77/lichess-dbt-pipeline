@@ -39,13 +39,23 @@ models:
         data_tests:
           - not_null
       - name: white_username
-        description: Null when white is a Lichess bot (bots have no user object).
+        description: Null when white has no account (anonymous player or Lichess AI).
       - name: black_username
-        description: Null when black is a Lichess bot.
-      - name: white_is_human
-        description: False when white is a Lichess bot.
-      - name: black_is_human
-        description: False when black is a Lichess bot.
+        description: Null when black has no account (anonymous player or Lichess AI).
+      - name: white_has_account
+        description: >
+          True if white is a logged-in Lichess user. False does NOT mean bot — could be
+          an anonymous human; check white_ai_level.
+      - name: black_has_account
+        description: See white_has_account.
+      - name: white_ai_level
+        description: Stockfish level if white is the Lichess AI, else null.
+      - name: black_ai_level
+        description: Stockfish level if black is the Lichess AI, else null.
+      - name: ply_count
+        description: Half-moves played, from the space-separated moves string. 0 if no moves.
+        data_tests:
+          - not_null
       - name: opening_eco
         description: ECO code. Can be null (e.g. games started from a custom position).
       - name: opening_name

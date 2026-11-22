@@ -9,8 +9,11 @@ select
 	data->'players'->'black'->'user'->>'name'	as black_username,
 	(data->'players'->'white'->>'rating')::int	as white_rating,
 	(data->'players'->'black'->>'rating')::int	as black_rating,
-	(data->'players'->'white' ? 'user') as white_is_human,
-	(data->'players'->'black' ? 'user') as black_is_human,
+	(data->'players'->'white' ? 'user')		as white_has_account,
+	(data->'players'->'black' ? 'user')		as black_has_account,
+	(data->'players'->'white'->>'aiLevel')::int	as white_ai_level,
+	(data->'players'->'black'->>'aiLevel')::int	as black_ai_level,
+	coalesce(array_length(string_to_array(data->>'moves', ' '), 1), 0) as ply_count,
 	data->'opening'->>'eco'				as opening_eco,
 	data->'opening'->>'name'			as opening_name,
 	(data->'opening'->>'ply')::int			as opening_ply

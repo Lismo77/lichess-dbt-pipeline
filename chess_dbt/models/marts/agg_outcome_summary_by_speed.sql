@@ -9,7 +9,7 @@ select
 	round(100.0 * count(*) filter (where result = 'draw') / nullif(count(*),0),1) as draw_pct
 from {{ ref('fct_my_games') }}
 where is_rated = true
-	and not is_vs_bot
+	and opponent_type = 'human'
 group by speed
 order by total_games desc
 

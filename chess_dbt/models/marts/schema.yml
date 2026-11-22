@@ -3,8 +3,9 @@ version: 2
 models:
   - name: fct_my_games
     description: >
-      One row per game, reframed from my perspective (my color, my rating, my result).
-      Includes unrated and bot games; filter with is_rated / is_vs_bot.
+      One row per real game, reframed from my perspective (my color, my rating, my result).
+      Excludes stream-setup games: AI opponent and ply_count <= var setup_game_max_plies.
+      Includes unrated, anonymous, and real AI games; filter with is_rated / opponent_type.
     columns:
       - name: game_id
         description: Lichess game id (primary key).
@@ -28,8 +29,19 @@ models:
           - accepted_values:
               arguments:
                 values: ['win', 'loss', 'draw']
-      - name: is_vs_bot
-        description: True if either side is a Lichess bot.
+      - name: opponent_type
+        description: >
+          human = Lichess account; anonymous = no account and not AI (e.g. a
+          play-with-a-friend link); ai = Lichess AI (Stockfish), see opponent_ai_level.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['human', 'anonymous', 'ai']
+      - name: opponent_ai_level
+        description: Stockfish level 1–8 when opponent_type = 'ai', else null.
+      - name: ply_count
+        description: Half-moves played (one ply = one side's move).
         data_tests:
           - not_null
 
@@ -54,7 +66,7 @@ models:
 
   - name: agg_outcome_by_openings
     description: >
-      Rated, human-opponent results by opening family. Games with no opening
+      Rated games vs human accounts, results by opening family. Games with no opening
       (null ECO) drop out via the inner join.
     columns:
       - name: opening_family
@@ -63,7 +75,7 @@ models:
           - not_null
 
   - name: agg_outcome_summary_by_speed
-    description: Rated, human-opponent win/loss/draw counts and percentages by speed.
+    description: Rated games vs human accounts, win/loss/draw counts and percentages by speed.
     columns:
       - name: speed
         data_tests:

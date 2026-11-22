@@ -17,6 +17,6 @@ from games g
 join openings o on g.opening_eco = o.opening_eco
 	and g.opening_name = o.opening_name
 where g.is_rated = true
-	and not g.is_vs_bot
+	and g.opponent_type = 'human'
 group by o.opening_family
 order by total_games desc
