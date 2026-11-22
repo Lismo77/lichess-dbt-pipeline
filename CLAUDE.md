@@ -7,14 +7,15 @@ every change like a teacher (what, why, and the DE concept behind it).
 ## Pipeline
 
 ```
-Lichess API ──fetch_games.py──▶ data/raw/*.jsonl ──load_games.py──▶ Postgres raw.games ──dbt──▶ dbt_dev.*
+Lichess API ──fetch_games.py──▶ data/raw/*.jsonl ─┬─load_games.py──────▶ Postgres raw.games ─────────dbt──▶ dbt_dev.*
+                                                  └─load_databricks.py─▶ raw.lichess.games (bronze) ─dbt──▶ analytics.dbt_dev.*
 ```
 
-- `raw.games(id text pk, data jsonb, loaded_at timestamptz)` — one row per game, full API payload. DDL in `sql/001_create_raw.sql`.
+- `raw.games(id text pk, data jsonb, loaded_at timestamptz)` — one row per game, full API payload. DDL in `sql/postgres/001_create_raw.sql`.
 - Extract writes one immutable timestamped batch file per run to `data/raw/` (gitignored). Load upserts on `id` and skips unchanged payloads, so it's idempotent.
 - Fetch is incremental: newest `createdAt` in raw.games minus a 14-day lookback (Lichess `since` filters on creation time, so late-finishing correspondence games need the overlap).
 - Shared script config (paths, username, DB connection) in `scripts/common.py`.
-- dbt project lives in `chess_dbt/`. Target schema: `dbt_dev`. Profile is in `~/.dbt/profiles.yml` (not in repo; also has a Databricks target).
+- dbt project lives in `chess_dbt/`. Targets: `dev` (Postgres, default) and `databricks`. Profile committed at `chess_dbt/profiles.yml`.
 - Layers: `models/staging/` (1:1 with source, rename + cast only) → `models/marts/` (`fct_`, `dim_`, `agg_`).
 - dbt vars in `dbt_project.yml`: `lichess_username`, `setup_game_max_plies`. Username also lives in `.env` as `LICHESS_USERNAME` for the Python side — keep in sync.
 
@@ -27,6 +28,17 @@ All run from the repo root unless noted. The venv is NOT auto-activated; use the
 - dbt (from `chess_dbt/`): `../venv/bin/dbt build` (run + test), `../venv/bin/dbt build -s <model>+` (model and downstream)
 - Ad-hoc SQL: `set -a; . ./.env; set +a; PGPASSWORD="$PG_PASSWORD" psql -h "$PG_HOST" -U "$PG_USER" -d "$PG_DB"`
 
+- Databricks: `venv/bin/python scripts/load_databricks.py` then `../venv/bin/dbt build --target databricks`
+- Parity (after building both): `venv/bin/python scripts/check_parity.py` — exit 1 on any row difference
+
+### Databricks
+
+- Workspace catalogs: `raw` (landing; also has dbt-tutorial `jaffle_shop`/`stripe` — not ours), `analytics` (dbt output). Default `workspace` catalog unused.
+- `raw.lichess.landing` volume holds batch files; `raw.lichess.games` bronze is APPEND-ONLY (id, data VARIANT, source_file, loaded_at) with duplicate games across files. `stg_games` dedupes by latest `lastMoveAt`.
+- COPY INTO is file-idempotent; never "fix" duplicates in bronze — that's staging's job.
+- PATs expire: an `Invalid access token` 403 means the user must generate a new one (Settings > Developer > Access tokens) into `.env`.
+- `pydantic.v1` UserWarning on every dbt run comes from metricflow (pulled in by dbt-databricks) on Python 3.14 — harmless, upstream.
+
 ### Env / secrets
 
 - `.env` (repo root) is the single source for DB settings. `chess_dbt/profiles.yml` is committed and reads host/port/dbname/user/pass via `env_var('PG_*')` — no values in it. dbt picks it over `~/.dbt/` when run from `chess_dbt/`.
@@ -36,7 +48,7 @@ All run from the repo root unless noted. The venv is NOT auto-activated; use the
 
 ### CI
 
-- `.github/workflows/dbt-ci.yml`: on push to main / PRs, spins up `postgres:18`, runs `sql/001_create_raw.sql`, loads `ci/fixtures/games.jsonl` with the real loader, then `dbt build`. Throwaway creds in the workflow env — no GitHub Secrets needed for Postgres.
+- `.github/workflows/dbt-ci.yml`: on push to main / PRs, spins up `postgres:18`, runs `sql/postgres/001_create_raw.sql`, loads `ci/fixtures/games.jsonl` with the real loader, then `dbt build`. Throwaway creds in the workflow env — no GitHub Secrets needed for Postgres.
 - Fixture = 25 anonymized edge-case games. When a model handles a new edge case, add a game that hits it.
 - Reproduce CI locally: export tracked files with `git archive "$(git write-tree)"`, fresh venv from requirements.txt, `podman run --rm -p 5433:5432 postgres:18`, set `PG_PORT=5433`, run the workflow steps.
 - Review `git status` before every commit — `git add -A` sweeps in untracked files.
@@ -47,15 +59,17 @@ All run from the repo root unless noted. The venv is NOT auto-activated; use the
 - Remote: PUBLIC repo `Lismo77/lichess-dbt-pipeline` (portfolio piece). Assume anything committed is world-readable.
 - Repo-local git email is the GitHub noreply address — never commit with a personal email.
 - main has been pushed: never rewrite its history (no rebase/amend/force-push of pushed commits).
+- Workflow: every change goes branch → commits → push → PR (`gh pr create`) → CI green → the user reviews and merges on GitHub. Never commit directly to main.
 
 ## Conventions
 
-- Postgres SQL, lowercase keywords, tabs for indentation, CTEs that `select * from {{ ref(...) }}` at the top.
+- Lowercase keywords, tabs for indentation, CTEs that `select * from {{ ref(...) }}` at the top.
+- Models must run on BOTH Postgres and Databricks. No dialect-specific syntax in models (`->>`, `?`, `::`, `string_to_array`, `split`, …) — add or reuse a dispatch macro in `macros/cross_db.sql`. Prefer portable `cast(x as t)`. Verify with `check_parity.py`.
 - Percentages: `round(100.0 * x / nullif(n, 0), 1)` — always guard the divisor.
 - Analysis marts filter to `is_rated and opponent_type = 'human'` unless the model name says otherwise.
 - Raw is a faithful copy of the API — never filter at ingest. Junk/exclusion rules live in dbt where they're reversible.
 
-## Data facts (verified 2026-11-22, 452 raw games / 441 in fct)
+## Data facts (verified 2026-11-22, 452 games / 440 in fct, identical on both targets)
 
 - `winner` is null only for real draws (stalemate, draw, and timeout/outoftime with insufficient material). No `aborted` games seen yet — if they appear, `fct_my_games.result` will wrongly call them draws.
 - A player with no `players.<color>.user` key is either the Lichess AI (has `aiLevel`) or an anonymous human (neither key) — no account ≠ bot. `fct_my_games.opponent_type` = human / anonymous / ai.

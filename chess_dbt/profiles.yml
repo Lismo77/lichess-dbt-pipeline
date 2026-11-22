@@ -14,3 +14,14 @@ chess_dbt:
       pass: "{{ env_var('PG_PASSWORD') }}"
       schema: dbt_dev
       threads: 4
+
+    # Select with: dbt build --target databricks
+    # dbt only renders the target in use, so CI (Postgres) doesn't need these vars.
+    databricks:
+      type: databricks
+      host: "{{ env_var('DATABRICKS_HOST') }}"
+      http_path: "{{ env_var('DATABRICKS_HTTP_PATH') }}"
+      token: "{{ env_var('DATABRICKS_TOKEN') }}"
+      catalog: analytics      # modeled data; raw lands in the raw catalog (see sources.yml)
+      schema: dbt_dev
+      threads: 4

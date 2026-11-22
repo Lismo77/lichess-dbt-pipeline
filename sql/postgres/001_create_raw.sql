@@ -1,5 +1,5 @@
 -- Landing table for the Lichess API. Run once per database:
---   psql -h $PG_HOST -U $PG_USER -d $PG_DB -f sql/001_create_raw.sql
+--   psql -h $PG_HOST -U $PG_USER -d $PG_DB -f sql/postgres/001_create_raw.sql
 -- Idempotent (IF NOT EXISTS), so re-running is safe.
 
 create schema if not exists raw;
