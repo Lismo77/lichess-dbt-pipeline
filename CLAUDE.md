@@ -40,6 +40,13 @@ All run from the repo root unless noted. The venv is NOT auto-activated; use the
 - Fixture = 25 anonymized edge-case games. When a model handles a new edge case, add a game that hits it.
 - Reproduce CI locally: export tracked files with `git archive "$(git write-tree)"`, fresh venv from requirements.txt, `podman run --rm -p 5433:5432 postgres:18`, set `PG_PORT=5433`, run the workflow steps.
 - Review `git status` before every commit — `git add -A` sweeps in untracked files.
+- Check a pushed run with `gh run list` / `gh run watch <id> --exit-status`.
+
+### Git / GitHub
+
+- Remote: PUBLIC repo `Lismo77/lichess-dbt-pipeline` (portfolio piece). Assume anything committed is world-readable.
+- Repo-local git email is the GitHub noreply address — never commit with a personal email.
+- main has been pushed: never rewrite its history (no rebase/amend/force-push of pushed commits).
 
 ## Conventions
 

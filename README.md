@@ -1,5 +1,7 @@
 # Chess Analytics
 
+[![dbt CI](https://github.com/Lismo77/lichess-dbt-pipeline/actions/workflows/dbt-ci.yml/badge.svg)](https://github.com/Lismo77/lichess-dbt-pipeline/actions/workflows/dbt-ci.yml)
+
 ELT pipeline over my Lichess games: Python extracts from the Lichess API and loads raw JSON
 into Postgres; dbt transforms it into tested, documented analytics tables.
 
