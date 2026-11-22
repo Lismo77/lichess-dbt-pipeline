@@ -1,0 +1,16 @@
+# Committed on purpose: holds no secrets, only references to env vars.
+# Values come from .env locally (dbt auto-loads it) and from the workflow env in CI.
+# dbt checks the current directory for profiles.yml before ~/.dbt/, so running from
+# chess_dbt/ uses this file.
+chess_dbt:
+  target: dev
+  outputs:
+    dev:
+      type: postgres
+      host: "{{ env_var('PG_HOST') }}"
+      port: "{{ env_var('PG_PORT', '5432') | as_number }}"
+      dbname: "{{ env_var('PG_DB') }}"
+      user: "{{ env_var('PG_USER') }}"
+      pass: "{{ env_var('PG_PASSWORD') }}"
+      schema: dbt_dev
+      threads: 4

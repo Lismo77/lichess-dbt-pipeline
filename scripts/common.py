@@ -17,6 +17,7 @@ USERNAME = os.getenv("LICHESS_USERNAME", "lismobegins")
 def connect():
 	return psycopg.connect(
 		host=os.getenv("PG_HOST"),
+		port=os.getenv("PG_PORT", "5432"),
 		dbname=os.getenv("PG_DB"),
 		user=os.getenv("PG_USER"),
 		password=os.getenv("PG_PASSWORD"),

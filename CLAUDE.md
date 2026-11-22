@@ -29,10 +29,17 @@ All run from the repo root unless noted. The venv is NOT auto-activated; use the
 
 ### Env / secrets
 
-- `.env` (repo root) is the single source for DB settings. `~/.dbt/profiles.yml` reads host/dbname/user/pass via `env_var('PG_*')` — no values in the profile.
+- `.env` (repo root) is the single source for DB settings. `chess_dbt/profiles.yml` is committed and reads host/port/dbname/user/pass via `env_var('PG_*')` — no values in it. dbt picks it over `~/.dbt/` when run from `chess_dbt/`.
 - dbt 1.12 auto-loads `.env` itself (`find_dotenv(usecwd=True)` in `dbt/cli/main.py`, walks up from cwd; shell vars win over `.env`). So dbt works from anywhere inside the repo, but fails outside it without the vars exported.
 - The user's interactive shell uses direnv (root `.envrc` = `dotenv`). Claude's non-interactive shell does NOT trigger the direnv hook — keep the `set -a; . ./.env; set +a` prefix, or `direnv exec . <cmd>`.
 - Never echo a secret var, even to check it's set — test with `[ -n "$VAR" ]` and print only yes/no.
+
+### CI
+
+- `.github/workflows/dbt-ci.yml`: on push to main / PRs, spins up `postgres:18`, runs `sql/001_create_raw.sql`, loads `ci/fixtures/games.jsonl` with the real loader, then `dbt build`. Throwaway creds in the workflow env — no GitHub Secrets needed for Postgres.
+- Fixture = 25 anonymized edge-case games. When a model handles a new edge case, add a game that hits it.
+- Reproduce CI locally: export tracked files with `git archive "$(git write-tree)"`, fresh venv from requirements.txt, `podman run --rm -p 5433:5432 postgres:18`, set `PG_PORT=5433`, run the workflow steps.
+- Review `git status` before every commit — `git add -A` sweeps in untracked files.
 
 ## Conventions
 

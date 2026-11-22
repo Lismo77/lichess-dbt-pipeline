@@ -16,3 +16,6 @@ chess_dbt/logs/
 
 # Claude Code per-user local settings
 .claude/settings.local.json
+
+# dbt per-machine anonymous usage id
+chess_dbt/.user.yml

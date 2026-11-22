@@ -1,0 +1,67 @@
+# Build every dbt model and run every test against a throwaway Postgres loaded
+# with the committed fixture (ci/fixtures/games.jsonl). Runs on pushes to main
+# and on every pull request, so broken SQL never merges unnoticed.
+name: dbt CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:        # "Run workflow" button in the Actions tab
+
+# A newer push to the same branch cancels the in-flight run for the old commit.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  dbt-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    # A Postgres container that lives only for this job. Its credentials are
+    # throwaway values, not secrets — nothing real is reachable from here.
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: chess_ci
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    # Same variable names as .env, so scripts and profiles.yml work unchanged.
+    env:
+      PG_HOST: localhost
+      PG_PORT: "5432"
+      PG_DB: chess_ci
+      PG_USER: ci
+      PG_PASSWORD: ci
+      PGPASSWORD: ci                 # read by psql
+      LICHESS_USERNAME: lismobegins
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+          cache: pip                 # reuse downloaded wheels between runs
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Create raw schema
+        run: psql -h "$PG_HOST" -U "$PG_USER" -d "$PG_DB" -v ON_ERROR_STOP=1 -f sql/001_create_raw.sql
+
+      - name: Load fixture games
+        run: python scripts/load_games.py ci/fixtures/games.jsonl
+
+      - name: dbt build (models + tests)
+        working-directory: chess_dbt
+        run: dbt build
