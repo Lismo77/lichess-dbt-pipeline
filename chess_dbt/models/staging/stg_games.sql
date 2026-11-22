@@ -1,0 +1,17 @@
+select
+	id						as game_id,
+	(data->>'rated')::boolean			as is_rated,
+	data->>'speed'					as speed,
+	data->>'status'					as status,
+	data->>'winner'					as winner,
+	to_timestamp((data->>'createdAt')::bigint / 1000) as created_at,
+	data->'players'->'white'->'user'->>'name'	as white_username,
+	data->'players'->'black'->'user'->>'name'	as black_username,
+	(data->'players'->'white'->>'rating')::int	as white_rating,
+	(data->'players'->'black'->>'rating')::int	as black_rating,
+	(data->'players'->'white' ? 'user') as white_is_human,
+	(data->'players'->'black' ? 'user') as black_is_human,
+	data->'opening'->>'eco'				as opening_eco,
+	data->'opening'->>'name'			as opening_name,
+	(data->'opening'->>'ply')::int			as opening_ply
+from {{ source('raw', 'games') }}

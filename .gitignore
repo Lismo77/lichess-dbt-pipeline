@@ -1,0 +1,18 @@
+# Secrets — never commit
+.env
+
+# Python
+venv/
+__pycache__/
+
+# Raw extracts (reproducible via scripts/fetch_games.py)
+data/raw/
+
+# Logs and dbt build artifacts
+logs/
+chess_dbt/target/
+chess_dbt/dbt_packages/
+chess_dbt/logs/
+
+# Claude Code per-user local settings
+.claude/settings.local.json
