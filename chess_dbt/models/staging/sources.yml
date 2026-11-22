@@ -2,6 +2,11 @@ version: 2
 
 sources:
   - name: raw
-    schema: raw
+    description: Lichess API payloads as landed by scripts/load_*.py.
+    # Same logical source, different physical home per platform:
+    #   postgres:   <db>.raw.games          (upserted — one row per game)
+    #   databricks: raw.lichess.games       (append-only bronze — duplicates possible)
+    database: "{{ 'raw' if target.type == 'databricks' else target.database }}"
+    schema: "{{ 'lichess' if target.type == 'databricks' else 'raw' }}"
     tables:
-      -  name: games
+      - name: games
