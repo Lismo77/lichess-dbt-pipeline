@@ -1,0 +1,71 @@
+version: 2
+
+models:
+  - name: fct_my_games
+    description: >
+      One row per game, reframed from my perspective (my color, my rating, my result).
+      Includes unrated and bot games; filter with is_rated / is_vs_bot.
+    columns:
+      - name: game_id
+        description: Lichess game id (primary key).
+        data_tests:
+          - unique
+          - not_null
+      - name: my_color
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['white', 'black']
+      - name: my_rating
+        description: My rating at game start.
+        data_tests:
+          - not_null
+      - name: result
+        description: Outcome for me. A null winner is treated as a draw — see stg_games.status.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['win', 'loss', 'draw']
+      - name: is_vs_bot
+        description: True if either side is a Lichess bot.
+        data_tests:
+          - not_null
+
+  - name: dim_openings
+    description: >
+      Distinct openings seen in my games. Grain is (opening_eco, opening_name) — the
+      same name can appear under several ECO codes, so neither column is unique alone.
+    data_tests:
+      - unique:
+          arguments:
+            column_name: "opening_eco || '|' || opening_name"
+    columns:
+      - name: opening_eco
+        data_tests:
+          - not_null
+      - name: opening_family
+        description: Text before the first ':' in opening_name (e.g. 'Sicilian Defense').
+        data_tests:
+          - not_null
+      - name: opening_variation
+        description: Text after the first ':', or null for a base opening.
+
+  - name: agg_outcome_by_openings
+    description: >
+      Rated, human-opponent results by opening family. Games with no opening
+      (null ECO) drop out via the inner join.
+    columns:
+      - name: opening_family
+        data_tests:
+          - unique
+          - not_null
+
+  - name: agg_outcome_summary_by_speed
+    description: Rated, human-opponent win/loss/draw counts and percentages by speed.
+    columns:
+      - name: speed
+        data_tests:
+          - unique
+          - not_null

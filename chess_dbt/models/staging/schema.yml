@@ -1,0 +1,52 @@
+version: 2
+
+models:
+  - name: stg_games
+    description: >
+      One row per Lichess game from raw.games, with JSON fields extracted and cast.
+      No business logic — that lives in marts.
+    columns:
+      - name: game_id
+        description: Lichess game id (primary key).
+        data_tests:
+          - unique
+          - not_null
+      - name: speed
+        description: Lichess time-control bucket.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['ultraBullet', 'bullet', 'blitz', 'rapid', 'classical', 'correspondence']
+      - name: status
+        description: >
+          How the game ended. The allowed list is deliberately limited to statuses where
+          "winner is null" really means a draw. aborted / noStart / unknownFinish are
+          excluded so this test fails before they get counted as draws downstream.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['mate', 'resign', 'stalemate', 'draw', 'timeout', 'outoftime', 'cheat']
+      - name: winner
+        description: "'white', 'black', or null for a draw."
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['white', 'black']
+      - name: created_at
+        description: Game start time (converted from epoch ms).
+        data_tests:
+          - not_null
+      - name: white_username
+        description: Null when white is a Lichess bot (bots have no user object).
+      - name: black_username
+        description: Null when black is a Lichess bot.
+      - name: white_is_human
+        description: False when white is a Lichess bot.
+      - name: black_is_human
+        description: False when black is a Lichess bot.
+      - name: opening_eco
+        description: ECO code. Can be null (e.g. games started from a custom position).
+      - name: opening_name
+        description: "Full opening name, e.g. 'Sicilian Defense: Najdorf Variation'."

@@ -33,7 +33,15 @@ All run from the repo root unless noted. The venv is NOT auto-activated; use the
 ## Data facts (verified 2026-11-22, 374 games)
 
 - `winner` is null only for real draws (stalemate, draw, and timeout/outoftime with insufficient material). No `aborted` games seen yet — if they appear, `fct_my_games.result` will wrongly call them draws.
-- Bot opponents have no `players.<color>.user` key; that's how `is_vs_bot` is derived.
+- Bot opponents have no `players.<color>.user` key; that's how `is_vs_bot` is derived (and why usernames can be null).
+- `dim_openings` grain is `(opening_eco, opening_name)` — names repeat across ECO codes.
+- One game has a null ECO; it drops out of opening aggregates via inner join.
+
+## Testing
+
+- Generic tests live in each folder's `schema.yml` (dbt 1.12 syntax: test params go under `arguments:`).
+- Singular tests in `chess_dbt/tests/`. `accepted_values` lists encode the *valid domain*, not just observed values.
+- When adding a test, make it fail once on purpose to prove it can — stage the file first so `git restore` works.
 
 ## Working agreement
 
