@@ -32,6 +32,9 @@ models:
       +materialized: table  # what people query — compute once at build time, read fast
 
 vars:
+  # Whose games these are — every "my_*" column is relative to this player.
+  lichess_username: lismobegins
+
   # Games vs the Lichess AI this short are OBS/stream setup, not real games.
   # Observed setup games: 2–20 plies. Raise if setup ever runs longer; real practice
   # games vs Stockfish should comfortably exceed this.

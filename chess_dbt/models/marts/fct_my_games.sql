@@ -11,7 +11,7 @@ with games as (
 sided as (
 	select
 		*,
-		white_username is not distinct from 'lismobegins' as i_am_white
+		white_username is not distinct from '{{ var("lichess_username") }}' as i_am_white
 	from games
 ),
 

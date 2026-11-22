@@ -3,5 +3,5 @@
 -- Singular test: returns the offending rows; dbt fails the test if any come back.
 select game_id, white_username, black_username
 from {{ ref('stg_games') }}
-where coalesce(white_username, '') <> 'lismobegins'
-	and coalesce(black_username, '') <> 'lismobegins'
+where white_username is distinct from '{{ var("lichess_username") }}'
+	and black_username is distinct from '{{ var("lichess_username") }}'
