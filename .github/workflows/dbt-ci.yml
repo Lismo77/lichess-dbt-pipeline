@@ -62,6 +62,12 @@ jobs:
       - name: Load fixture games
         run: python scripts/load_games.py ci/fixtures/games.jsonl
 
+      - name: Install dbt packages
+        working-directory: chess_dbt
+        run: dbt deps            # installs the versions pinned in package-lock.yml
+
       - name: dbt build (models + tests)
         working-directory: chess_dbt
-        run: dbt build
+        # The fixture is a sample, not my full history: skip whole-history invariants.
+        # Whole value double-quoted: an unquoted ": " inside would be read as a YAML key.
+        run: "dbt build --vars '{complete_history: false}'"

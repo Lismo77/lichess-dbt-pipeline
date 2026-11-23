@@ -17,7 +17,8 @@ Lichess API ──fetch_games.py──▶ data/raw/*.jsonl ─┬─load_games.p
 - Shared script config (paths, username, DB connection) in `scripts/common.py`.
 - dbt project lives in `chess_dbt/`. Targets: `dev` (Postgres, default) and `databricks`. Profile committed at `chess_dbt/profiles.yml`.
 - Layers: `models/staging/` (1:1 with source, rename + cast only) → `models/marts/` (`fct_`, `dim_`, `agg_`).
-- dbt vars in `dbt_project.yml`: `lichess_username`, `setup_game_max_plies`. Username also lives in `.env` as `LICHESS_USERNAME` for the Python side — keep in sync.
+- dbt vars in `dbt_project.yml`: `lichess_username`, `setup_game_max_plies`, `local_timezone` (day boundaries — never cast a timestamp to date directly; use the `local_date` macro), `complete_history` (CI sets false; gates whole-history tests). Username also lives in `.env` as `LICHESS_USERNAME` for the Python side — keep in sync.
+- Packages: `dbt_utils` (packages.yml + committed package-lock.yml). Run `../venv/bin/dbt deps` after cloning or changing packages. Jinja is NOT rendered inside generic-test arguments — use a package test (e.g. `dbt_utils.unique_combination_of_columns`) instead of macro-built expressions.
 
 ## Commands
 
@@ -53,6 +54,7 @@ All run from the repo root unless noted. The venv is NOT auto-activated; use the
 - Reproduce CI locally: export tracked files with `git archive "$(git write-tree)"`, fresh venv from requirements.txt, `podman run --rm -p 5433:5432 postgres:18`, set `PG_PORT=5433`, run the workflow steps.
 - Review `git status` before every commit — `git add -A` sweeps in untracked files.
 - Check a pushed run with `gh run list` / `gh run watch <id> --exit-status`.
+- After editing the workflow, validate it before pushing: `venv/bin/python -c "import yaml; yaml.safe_load(open('.github/workflows/dbt-ci.yml'))"`. Quote any `run:` value containing `: ` — otherwise GitHub can't load the file and the PR shows no checks at all.
 
 ### Git / GitHub
 
@@ -78,6 +80,8 @@ All run from the repo root unless noted. The venv is NOT auto-activated; use the
 - `dim_openings` grain is `(opening_eco, opening_name)` — names repeat across ECO codes.
 - Games with a null ECO drop out of opening aggregates via inner join.
 - Games with 0 plies (ended before a move; Lichess still records a result) are excluded from fct. One seen: unrated, recorded as a timeout win.
+- Ratings are per speed. Rating chain is continuous: each rated game's `my_rating` = previous game's `my_rating_after` (398/398 pairs; enforced by a test). First ~11 games per speed are provisional (swings up to −257 vs ±32 established) — kept and flagged.
+- ~23% of games fall on a different calendar day in UTC vs America/New_York. Postgres session tz is New York, Databricks is UTC — a naive date cast silently disagrees across targets.
 
 ## Testing
 

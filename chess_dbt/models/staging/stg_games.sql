@@ -29,6 +29,11 @@ select
 	{{ json_text('data', ['players', 'black', 'user', 'name']) }}	as black_username,
 	cast({{ json_text('data', ['players', 'white', 'rating']) }} as int)	as white_rating,
 	cast({{ json_text('data', ['players', 'black', 'rating']) }} as int)	as black_rating,
+	cast({{ json_text('data', ['players', 'white', 'ratingDiff']) }} as int)	as white_rating_diff,
+	cast({{ json_text('data', ['players', 'black', 'ratingDiff']) }} as int)	as black_rating_diff,
+	-- Key only present while the rating is provisional; absent = established.
+	coalesce(cast({{ json_text('data', ['players', 'white', 'provisional']) }} as boolean), false)	as white_is_provisional,
+	coalesce(cast({{ json_text('data', ['players', 'black', 'provisional']) }} as boolean), false)	as black_is_provisional,
 	{{ json_has_key('data', ['players', 'white'], 'user') }}	as white_has_account,
 	{{ json_has_key('data', ['players', 'black'], 'user') }}	as black_has_account,
 	cast({{ json_text('data', ['players', 'white', 'aiLevel']) }} as int)	as white_ai_level,

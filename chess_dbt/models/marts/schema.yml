@@ -19,7 +19,25 @@ models:
               arguments:
                 values: ['white', 'black']
       - name: my_rating
-        description: My rating at game start.
+        description: My rating at game start (per speed — Lichess rates each speed separately).
+        data_tests:
+          - not_null
+      - name: my_rating_diff
+        description: Points won/lost this game. Null for unrated games.
+        data_tests:
+          - not_null:
+              config:
+                where: "is_rated"   # only rated games must have one
+      - name: my_rating_after
+        description: my_rating + my_rating_diff. Null for unrated games.
+        data_tests:
+          - not_null:
+              config:
+                where: "is_rated"
+      - name: my_rating_is_provisional
+        description: >
+          True while Lichess still considers my rating in this speed provisional (first
+          ~10 games; big swings from the 1500 start). Kept, not filtered — consumers decide.
         data_tests:
           - not_null
       - name: result
@@ -50,9 +68,9 @@ models:
       Distinct openings seen in my games. Grain is (opening_eco, opening_name) — the
       same name can appear under several ECO codes, so neither column is unique alone.
     data_tests:
-      - unique:
+      - dbt_utils.unique_combination_of_columns:
           arguments:
-            column_name: "opening_eco || '|' || opening_name"
+            combination_of_columns: [opening_eco, opening_name]
     columns:
       - name: opening_eco
         data_tests:
@@ -81,3 +99,41 @@ models:
         data_tests:
           - unique
           - not_null
+
+  - name: agg_rating_daily
+    description: >
+      Rating history: one row per speed per local calendar day with rated games vs humans.
+      Day boundaries use var local_timezone, not UTC. Days with no games have no row
+      (the rating doesn't change on days I don't play). Provisional games are included;
+      filter on includes_provisional to hide the noisy early days.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [speed, played_on]
+    columns:
+      - name: speed
+        data_tests:
+          - not_null
+      - name: played_on
+        description: Local calendar date (var local_timezone).
+        data_tests:
+          - not_null
+      - name: games_played
+        data_tests:
+          - not_null
+      - name: opening_rating
+        description: Rating before the day's first game.
+        data_tests:
+          - not_null
+      - name: closing_rating
+        description: Rating after the day's last game — the value to chart.
+        data_tests:
+          - not_null
+      - name: net_change
+        description: closing_rating - opening_rating. Reconciled against per-game diffs by a singular test.
+      - name: day_high
+        description: Highest rating held at any point that day.
+      - name: day_low
+        description: Lowest rating held at any point that day.
+      - name: includes_provisional
+        description: True if any of the day's games were played on a provisional rating.

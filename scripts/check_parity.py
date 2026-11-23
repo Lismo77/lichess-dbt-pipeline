@@ -6,6 +6,7 @@ self-consistent; this proves they produce the same answers.
 Usage: venv/bin/python scripts/check_parity.py
 Exit code 1 on any difference.
 """
+import json
 import os
 import sys
 from contextlib import closing
@@ -14,9 +15,16 @@ from decimal import Decimal
 
 from databricks import sql
 
-from common import connect
+from common import REPO_ROOT, connect
 
-MODELS = ["stg_games", "fct_my_games", "dim_openings", "agg_outcome_by_openings", "agg_outcome_summary_by_speed"]
+MANIFEST = REPO_ROOT / "chess_dbt" / "target" / "manifest.json"
+
+
+def project_models():
+	"""Every model in this dbt project, read from the manifest dbt writes on each run —
+	so a new model is checked automatically instead of being forgotten in a list."""
+	nodes = json.loads(MANIFEST.read_text())["nodes"].values()
+	return sorted(n["name"] for n in nodes if n["resource_type"] == "model" and n["package_name"] == "chess_dbt")
 
 
 def norm(v):
@@ -44,7 +52,7 @@ def main():
 	all_ok = True
 	with connect() as pg, closing(dbx), closing(dbx.cursor()) as dcur:
 		dcur.execute("set time zone 'UTC'")
-		for m in MODELS:
+		for m in project_models():
 			pcols, prows = fetch(pg.cursor(), f"select * from dbt_dev.{m}")
 			dcols, drows = fetch(dcur, f"select * from analytics.dbt_dev.{m}")
 			ok = pcols == dcols and prows == drows

@@ -71,7 +71,8 @@ venv/bin/python scripts/check_parity.py     # both targets, every model, row-for
 | Model | Grain | Notes |
 |---|---|---|
 | `stg_games` | game | JSON → typed columns; dedupes Databricks bronze |
-| `fct_my_games` | game I played | my color/rating/result, `opponent_type`; setup and zero-move games excluded |
+| `fct_my_games` | game I played | my color/result, rating before/after/diff + provisional flag, `opponent_type`; setup and zero-move games excluded |
 | `dim_openings` | (eco, name) | opening family / variation split |
 | `agg_outcome_summary_by_speed` | speed | rated games vs humans |
 | `agg_outcome_by_openings` | opening family | rated games vs humans |
+| `agg_rating_daily` | speed × local day | rating history: opening/closing/high/low, W/L/D; days in `local_timezone` |
