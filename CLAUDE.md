@@ -31,6 +31,7 @@ All run from the repo root unless noted. The venv is NOT auto-activated; use the
 
 - Databricks: `venv/bin/python scripts/load_databricks.py` then `../venv/bin/dbt build --target databricks`
 - Parity (after building both): `venv/bin/python scripts/check_parity.py` — exit 1 on any row difference
+- README chart: `venv/bin/python scripts/plot_rating_history.py` (reads Postgres `agg_rating_daily`, writes `docs/rating_history_{light,dark}.png`). Regenerate after new games; commit the PNGs. Colors are validated categorical slots 1–2.
 
 ### Databricks
 

@@ -10,3 +10,6 @@ requests==2.34.2
 dbt-databricks==1.13.1
 databricks-sdk==0.157.0
 databricks-sql-connector==4.9.0
+
+# Reporting (scripts/plot_rating_history.py)
+matplotlib==3.11.2
