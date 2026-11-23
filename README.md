@@ -13,6 +13,13 @@ Lichess API ─▶ fetch_games.py ─▶ data/raw/*.jsonl                       
                                                             raw.lichess.games (bronze)
 ```
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/rating_history_dark.png">
+  <img alt="Step chart of daily closing Lichess rating: rapid rising from about 1166 to 1257; blitz falling from 1120 to a June low near 965, flat through autumn, then climbing to 1077 in November." src="docs/rating_history_light.png">
+</picture>
+
+Built from `agg_rating_daily` by `scripts/plot_rating_history.py`.
+
 ## Design notes
 
 - **Raw is a faithful copy of the API.** Nothing is filtered at ingest; junk (stream-setup games,
