@@ -19,7 +19,25 @@ models:
               arguments:
                 values: ['white', 'black']
       - name: my_rating
-        description: My rating at game start.
+        description: My rating at game start (per speed — Lichess rates each speed separately).
+        data_tests:
+          - not_null
+      - name: my_rating_diff
+        description: Points won/lost this game. Null for unrated games.
+        data_tests:
+          - not_null:
+              config:
+                where: "is_rated"   # only rated games must have one
+      - name: my_rating_after
+        description: my_rating + my_rating_diff. Null for unrated games.
+        data_tests:
+          - not_null:
+              config:
+                where: "is_rated"
+      - name: my_rating_is_provisional
+        description: >
+          True while Lichess still considers my rating in this speed provisional (first
+          ~10 games; big swings from the 1500 start). Kept, not filtered — consumers decide.
         data_tests:
           - not_null
       - name: result

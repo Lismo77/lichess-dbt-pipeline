@@ -26,6 +26,11 @@ perspective as (
 		ply_count,
 		case when i_am_white then 'white' else 'black' end		as my_color,
 		case when i_am_white then white_rating else black_rating end	as my_rating,
+		case when i_am_white then white_rating_diff else black_rating_diff end	as my_rating_diff,
+		-- Rating after the game. Null for unrated games (no ratingDiff).
+		case when i_am_white then white_rating + white_rating_diff
+			else black_rating + black_rating_diff end			as my_rating_after,
+		case when i_am_white then white_is_provisional else black_is_provisional end as my_rating_is_provisional,
 		case when i_am_white then black_username else white_username end as opponent_username,
 		case
 			when (case when i_am_white then black_ai_level else white_ai_level end) is not null then 'ai'

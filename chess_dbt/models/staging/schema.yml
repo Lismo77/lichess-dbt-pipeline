@@ -48,6 +48,14 @@ models:
           an anonymous human; check white_ai_level.
       - name: black_has_account
         description: See white_has_account.
+      - name: white_rating_diff
+        description: Rating points white won/lost. Absent (null) for unrated games.
+      - name: black_rating_diff
+        description: See white_rating_diff.
+      - name: white_is_provisional
+        description: True while white's rating in this speed is provisional. Missing key = false.
+      - name: black_is_provisional
+        description: See white_is_provisional.
       - name: white_ai_level
         description: Stockfish level if white is the Lichess AI, else null.
       - name: black_ai_level
