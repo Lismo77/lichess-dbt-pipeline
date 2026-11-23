@@ -69,4 +69,5 @@ jobs:
       - name: dbt build (models + tests)
         working-directory: chess_dbt
         # The fixture is a sample, not my full history: skip whole-history invariants.
-        run: dbt build --vars '{complete_history: false}'
+        # Whole value double-quoted: an unquoted ": " inside would be read as a YAML key.
+        run: "dbt build --vars '{complete_history: false}'"
