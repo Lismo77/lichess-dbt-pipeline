@@ -1,0 +1,5 @@
+# dbt packages: reusable macros/tests, installed with `dbt deps` into dbt_packages/
+# (gitignored). package-lock.yml pins the exact resolved version — commit it.
+packages:
+  - package: dbt-labs/dbt_utils
+    version: [">=1.3.0", "<2.0.0"]

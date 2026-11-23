@@ -68,9 +68,9 @@ models:
       Distinct openings seen in my games. Grain is (opening_eco, opening_name) — the
       same name can appear under several ECO codes, so neither column is unique alone.
     data_tests:
-      - unique:
+      - dbt_utils.unique_combination_of_columns:
           arguments:
-            column_name: "opening_eco || '|' || opening_name"
+            combination_of_columns: [opening_eco, opening_name]
     columns:
       - name: opening_eco
         data_tests:
