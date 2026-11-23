@@ -68,6 +68,29 @@
 {%- endmacro %}
 
 
+{# ---- local_date: calendar date of a timestamp in var('local_timezone') ----
+	Must not depend on the session time zone (Postgres here runs in New York,
+	the Databricks warehouse in UTC — a plain cast to date would silently differ).
+	  postgres:   timestamptz AT TIME ZONE 'tz' -> local wall-clock timestamp
+	  databricks: convert_timezone('tz', ts)  -> local wall-clock TIMESTAMP_NTZ
+#}
+{% macro local_date(ts) -%}
+	{{ return(adapter.dispatch('local_date')(ts)) }}
+{%- endmacro %}
+
+{% macro default__local_date(ts) -%}
+	{{ exceptions.raise_compiler_error("local_date: no implementation for " ~ target.type) }}
+{%- endmacro %}
+
+{% macro postgres__local_date(ts) -%}
+	cast(({{ ts }}) at time zone '{{ var("local_timezone") }}' as date)
+{%- endmacro %}
+
+{% macro databricks__local_date(ts) -%}
+	cast(convert_timezone('{{ var("local_timezone") }}', {{ ts }}) as date)
+{%- endmacro %}
+
+
 {# ---- word_count: number of space-separated tokens; 0 for null or '' ----
 	Gotcha: Spark's split('', ' ') returns [''] (size 1), so Databricks needs an
 	explicit empty check. Postgres string_to_array('', ' ') is {} (length null).

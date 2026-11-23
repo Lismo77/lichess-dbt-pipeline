@@ -39,3 +39,7 @@ vars:
   # Observed setup games: 2–20 plies. Raise if setup ever runs longer; real practice
   # games vs Stockfish should comfortably exceed this.
   setup_game_max_plies: 20
+
+  # Which calendar day a game belongs to. Timestamps are stored in UTC; ~23% of
+  # games fall on a different day in UTC than locally (late-night play).
+  local_timezone: America/New_York
