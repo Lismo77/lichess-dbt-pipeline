@@ -54,6 +54,7 @@ All run from the repo root unless noted. The venv is NOT auto-activated; use the
 - Reproduce CI locally: export tracked files with `git archive "$(git write-tree)"`, fresh venv from requirements.txt, `podman run --rm -p 5433:5432 postgres:18`, set `PG_PORT=5433`, run the workflow steps.
 - Review `git status` before every commit — `git add -A` sweeps in untracked files.
 - Check a pushed run with `gh run list` / `gh run watch <id> --exit-status`.
+- After editing the workflow, validate it before pushing: `venv/bin/python -c "import yaml; yaml.safe_load(open('.github/workflows/dbt-ci.yml'))"`. Quote any `run:` value containing `: ` — otherwise GitHub can't load the file and the PR shows no checks at all.
 
 ### Git / GitHub
 
