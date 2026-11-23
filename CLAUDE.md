@@ -33,7 +33,7 @@ All run from the repo root unless noted. The venv is NOT auto-activated; use the
 
 ### Databricks
 
-- Workspace catalogs: `raw` (landing; also has dbt-tutorial `jaffle_shop`/`stripe` — not ours), `analytics` (dbt output). Default `workspace` catalog unused.
+- Workspace catalogs: `raw` (landing — only `lichess` + the auto-created `default`), `analytics` (dbt output). Default `workspace` catalog unused. dbt tutorial schemas were dropped 2026-11-22; `~/.dbt/profiles.yml` deleted (repo profile is the only one).
 - `raw.lichess.landing` volume holds batch files; `raw.lichess.games` bronze is APPEND-ONLY (id, data VARIANT, source_file, loaded_at) with duplicate games across files. `stg_games` dedupes by latest `lastMoveAt`.
 - COPY INTO is file-idempotent; never "fix" duplicates in bronze — that's staging's job.
 - PATs expire: an `Invalid access token` 403 means the user must generate a new one (Settings > Developer > Access tokens) into `.env`.
