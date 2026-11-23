@@ -3,6 +3,10 @@
 -- A failure means something other than a game moved my rating — e.g. Lichess
 -- refunding points after an opponent is banned for cheating. Investigate, then
 -- decide whether the daily model needs to account for it.
+-- Needs the complete game history (a sample has gaps by definition), so it is
+-- disabled when var complete_history is false, as in CI.
+{{ config(enabled=var('complete_history')) }}
+
 with rated as (
 	select
 		game_id,

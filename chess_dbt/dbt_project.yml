@@ -43,3 +43,8 @@ vars:
   # Which calendar day a game belongs to. Timestamps are stored in UTC; ~23% of
   # games fall on a different day in UTC than locally (late-night play).
   local_timezone: America/New_York
+
+  # True when the source holds my COMPLETE game history. Tests of invariants that
+  # need every game (e.g. the rating chain) only run then. CI loads a 25-game
+  # sample, so it sets this false: --vars '{complete_history: false}'
+  complete_history: true
